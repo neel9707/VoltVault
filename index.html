@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#02040a" />
+    <title>VoltVault</title>
+    <style>
+      :root {
+        --bg: #02040a;
+        --panel: rgba(10, 16, 30, 0.86);
+        --line: rgba(123, 231, 255, 0.18);
+        --text: #f4fbff;
+        --muted: #8fa2b8;
+        --cyan: #10e7ff;
+        --purple: #8a5cff;
+        --magenta: #d94cff;
+        --green: #3dffac;
+        --amber: #ffd166;
+        --danger: #ff5c7a;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 50% -12%, rgba(16, 231, 255, 0.28), transparent 32rem),
+          radial-gradient(circle at 96% 42%, rgba(217, 76, 255, 0.16), transparent 24rem),
+          linear-gradient(145deg, #02040a 0%, #07111e 54%, #02040a 100%);
+        display: grid;
+        place-items: center;
+        overflow-x: hidden;
+      }
+
+      button, input { font: inherit; }
+      button { cursor: pointer; }
+
+      .phone {
+        position: relative;
+        width: min(100vw, 440px);
+        height: min(920px, 100vh);
+        min-height: 680px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: clamp(0px, 4vw, 34px);
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          rgba(2, 4, 10, 0.95);
+        background-size: 36px 36px;
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.54), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        padding: 22px 18px 98px;
+      }
+
+      .top, .section-head, .row, .device, .setting {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .kicker, .label {
+        margin: 0;
+        color: var(--cyan);
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      h1, h2, p { margin: 0; }
+
+      h1 {
+        margin-top: 4px;
+        font-size: clamp(1.7rem, 8vw, 2.25rem);
+        line-height: 0.94;
+      }
+
+      h2 {
+        font-size: 1.08rem;
+        line-height: 1.15;
+      }
+
+      small {
+        color: var(--muted);
+        font-size: 0.77rem;
+        line-height: 1.35;
+      }
+
+      .icon {
+        position: relative;
+        width: 46px;
+        height: 46px;
+        display: grid;
+        place-items: center;
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .dot {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--danger);
+        box-shadow: 0 0 16px var(--danger);
+      }
+
+      svg {
+        width: 21px;
+        height: 21px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .view {
+        display: none;
+        height: calc(100% - 104px);
+        margin-top: 18px;
+        overflow-y: auto;
+        padding: 0 2px 22px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(16, 231, 255, 0.32) transparent;
+        animation: viewIn 300ms ease both;
+      }
+
+      .view.active { display: block; }
+
+      @keyframes viewIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .panel, .battery, .quick, .strip {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: linear-gradient(145deg, rgba(18, 28, 51, 0.88), rgba(4, 8, 18, 0.84));
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 20px 42px rgba(0, 0, 0, 0.26);
+      }
+
+      .battery {
+        grid-row: span 2;
+        padding: 14px;
+        min-height: 288px;
+      }
+
+      .quick {
+        min-height: 138px;
+        padding: 15px;
+        display: grid;
+        align-content: space-between;
+      }
+
+      .quick strong {
+        font-size: 2rem;
+      }
+
+      .orbit {
+        position: relative;
+        aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+      }
+
+      .gauge {
+        width: 100%;
+        height: 100%;
+        filter: drop-shadow(0 0 18px rgba(16, 231, 255, 0.34));
+        transform: rotate(-90deg);
+      }
+
+      .track, .progress {
+        fill: transparent;
+        stroke-width: 14;
+      }
+
+      .track { stroke: rgba(255, 255, 255, 0.08); }
+
+      .progress {
+        stroke: url(#voltGlow);
+        stroke-dasharray: 578;
+        stroke-dashoffset: 104;
+        transition: stroke-dashoffset 650ms cubic-bezier(.2, .8, .2, 1);
+      }
+
+      .core {
+        position: absolute;
+        inset: 22%;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        border-radius: 50%;
+        background: radial-gradient(circle at 50% 28%, rgba(16, 231, 255, 0.16), rgba(255, 255, 255, 0.03) 68%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .number {
+        font-size: clamp(2.6rem, 12vw, 3.5rem);
+        font-weight: 950;
+        line-height: 0.86;
+      }
+
+      .unit {
+        position: absolute;
+        top: 32%;
+        right: 23%;
+        color: var(--cyan);
+        font-weight: 900;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 0 12px;
+        border-radius: 999px;
+        color: #001017;
+        background: var(--green);
+        font-size: 0.78rem;
+        font-weight: 900;
+      }
+
+      .pulse {
+        color: var(--cyan);
+        font-weight: 900;
+        text-shadow: 0 0 14px rgba(16, 231, 255, 0.48);
+      }
+
+      .strip {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 12px;
+        padding: 12px;
+      }
+
+      .strip strong {
+        display: block;
+        margin-top: 5px;
+        font-size: 0.9rem;
+      }
+
+      .panel {
+        margin-top: 12px;
+        padding: 16px;
+      }
+
+      .assistant {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .assistant p:not(.kicker) {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.84rem;
+        line-height: 1.45;
+      }
+
+      .primary {
+        min-width: 98px;
+        min-height: 42px;
+        border: 0;
+        border-radius: 8px;
+        color: #02040a;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--cyan), var(--purple) 72%, var(--magenta));
+        box-shadow: 0 10px 28px rgba(16, 231, 255, 0.22);
+      }
+
+      .section-head { margin-bottom: 14px; }
+      .online { color: var(--green); font-size: 0.8rem; font-weight: 900; }
+
+      .device {
+        justify-content: flex-start;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .device:last-child { border-bottom: 0; padding-bottom: 0; }
+      .device b { margin-left: auto; color: var(--cyan); }
+
+      .device-icon, .marker, .avatar {
+        flex: 0 0 auto;
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        color: #04101a;
+        font-weight: 950;
+        background: linear-gradient(135deg, rgba(16, 231, 255, 0.94), rgba(138, 92, 255, 0.82));
+      }
+
+      .segmented {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(48px, 1fr));
+        padding: 3px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .segmented button {
+        min-height: 32px;
+        border: 0;
+        border-radius: 6px;
+        color: var(--muted);
+        background: transparent;
+        font-size: 0.78rem;
+        font-weight: 900;
+      }
+
+      .segmented button.active {
+        color: #02040a;
+        background: var(--cyan);
+      }
+
+      canvas {
+        width: 100%;
+        display: block;
+        border-radius: 6px;
+      }
+
+      .insights, .badges {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .insights .panel, .badges .panel {
+        min-height: 102px;
+        margin-top: 0;
+        display: grid;
+        align-content: space-between;
+        padding: 12px;
+      }
+
+      .vault-hero { text-align: center; }
+      .vault-hero h2 { margin-top: 5px; font-size: 1.38rem; }
+
+      .vault-meter {
+        width: min(66vw, 240px);
+        aspect-ratio: 1;
+        margin: 18px auto;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        border-radius: 50%;
+        border: 1px solid rgba(16, 231, 255, 0.34);
+        background:
+          conic-gradient(from 210deg, var(--cyan), var(--purple), var(--magenta), rgba(255, 255, 255, 0.08) 78%),
+          radial-gradient(circle, #07101e 0 62%, transparent 63%);
+        box-shadow: inset 0 0 34px rgba(0, 0, 0, 0.78), 0 0 36px rgba(138, 92, 255, 0.22);
+      }
+
+      .vault-meter span {
+        font-size: 3.5rem;
+        font-weight: 950;
+        line-height: 0.9;
+      }
+
+      .slider-label {
+        display: flex;
+        justify-content: space-between;
+        margin: 18px 0 10px;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .slider-label output { color: var(--cyan); font-weight: 900; }
+      input[type="range"] { width: 100%; accent-color: var(--cyan); }
+
+      .rule {
+        display: flex;
+        gap: 12px;
+        padding: 13px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .rule:last-child { border-bottom: 0; padding-bottom: 0; }
+
+      .marker {
+        width: 12px;
+        height: 42px;
+        border-radius: 999px;
+        background: var(--cyan);
+      }
+
+      .marker.purple { background: var(--purple); }
+      .marker.amber { background: var(--amber); }
+
+      .profile {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .avatar {
+        width: 58px;
+        height: 58px;
+        font-size: 1.45rem;
+      }
+
+      .setting {
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .setting:last-child { border-bottom: 0; }
+      input[type="checkbox"] { width: 42px; height: 24px; accent-color: var(--cyan); }
+
+      .nav {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        padding: 8px;
+        border: 1px solid rgba(123, 231, 255, 0.18);
+        border-radius: 18px;
+        background: rgba(4, 8, 18, 0.92);
+        backdrop-filter: blur(18px);
+      }
+
+      .nav button {
+        min-width: 0;
+        min-height: 58px;
+        display: grid;
+        place-items: center;
+        gap: 3px;
+        border: 1px solid transparent;
+        border-radius: 12px;
+        color: var(--muted);
+        background: transparent;
+      }
+
+      .nav button.active {
+        color: var(--cyan);
+        background: rgba(16, 231, 255, 0.1);
+        border-color: rgba(16, 231, 255, 0.22);
+      }
+
+      .nav span {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.68rem;
+        font-weight: 900;
+      }
+
+      @media (max-width: 380px) {
+        .phone { padding-inline: 12px; }
+        .grid, .insights, .badges { gap: 8px; }
+        .quick { min-height: 124px; padding: 12px; }
+        .quick strong { font-size: 1.62rem; }
+        .nav { left: 10px; right: 10px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="phone" aria-label="VoltVault smart energy dashboard">
+      <header class="top">
+        <div>
+          <p class="kicker">VoltVault</p>
+          <h1>Energy Control</h1>
+        </div>
+        <button class="icon" type="button" aria-label="Open notifications">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+            <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+          </svg>
+          <span class="dot"></span>
+        </button>
+      </header>
+
+      <section class="view active" data-view="home">
+        <div class="grid">
+          <article class="battery">
+            <div class="orbit">
+              <svg class="gauge" viewBox="0 0 220 220" aria-hidden="true">
+                <defs>
+                  <linearGradient id="voltGlow" x1="0" x2="1" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#10e7ff" />
+                    <stop offset="55%" stop-color="#7867ff" />
+                    <stop offset="100%" stop-color="#d94cff" />
+                  </linearGradient>
+                </defs>
+                <circle class="track" cx="110" cy="110" r="92" />
+                <circle class="progress" cx="110" cy="110" r="92" />
+              </svg>
+              <div class="core">
+                <span class="number" id="batteryPercent">82</span>
+                <span class="unit">%</span>
+                <small>Reserved 18%</small>
+              </div>
+            </div>
+            <div class="row">
+              <span class="pill">Charging</span>
+              <span class="pulse">+18.4 kW</span>
+            </div>
+          </article>
+
+          <article class="quick">
+            <span class="label">Health</span>
+            <strong id="healthValue">96%</strong>
+            <small>Cell balance optimal</small>
+          </article>
+          <article class="quick">
+            <span class="label">Temp</span>
+            <strong id="tempValue">31C</strong>
+            <small>Thermal load stable</small>
+          </article>
+        </div>
+
+        <section class="strip">
+          <article><span class="label">Range</span><strong>284 mi</strong></article>
+          <article><span class="label">Charge ETA</span><strong>42 min</strong></article>
+          <article><span class="label">Drain Risk</span><strong>Low</strong></article>
+        </section>
+
+        <section class="panel assistant">
+          <div>
+            <p class="kicker">Smart Charging Assistant</p>
+            <h2>Charge after 11:30 PM</h2>
+            <p>Grid demand drops 23% tonight. Delaying fast charge can reduce heat stress and preserve long-term battery health.</p>
+          </div>
+          <button class="primary" type="button">Schedule</button>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="kicker">Device Integration</p>
+              <h2>Synced network</h2>
+            </div>
+            <span class="online">3 online</span>
+          </div>
+          <article class="device"><span class="device-icon">📱</span><div><strong>iPhone Pro</strong><br><small>Battery API simulation</small></div><b>71%</b></article>
+          <article class="device"><span class="device-icon">EV</span><div><strong>Model E</strong><br><small>Home charger linked</small></div><b>82%</b></article>
+          <article class="device"><span class="device-icon">IoT</span><div><strong>IoT Hub</strong><br><small>Solar reserve active</small></div><b>64%</b></article>
+        </section>
+      </section>
+
+      <section class="view" data-view="analytics">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Energy Usage Analytics</p>
+            <h2>Usage intelligence</h2>
+          </div>
+          <div class="segmented">
+            <button class="active" type="button" data-range="day">Day</button>
+            <button type="button" data-range="week">Week</button>
+            <button type="button" data-range="month">Month</button>
+          </div>
+        </div>
+        <article class="panel">
+          <canvas id="usageChart" width="640" height="360"></canvas>
+        </article>
+        <div class="insights">
+          <article class="panel"><span class="label">Peak draw</span><strong id="peakDraw">7.8 kWh</strong><small>Between 6 PM and 8 PM</small></article>
+          <article class="panel"><span class="label">Saved</span><strong>14%</strong><small>Compared with last cycle</small></article>
+          <article class="panel"><span class="label">Forecast</span><strong>31.2 kWh</strong><small>Expected this week</small></article>
+        </div>
+        <section class="panel">
+          <p class="kicker">AI Insight</p>
+          <h2>Shift washer load to solar window</h2>
+          <p style="color: var(--muted); font-size: .84rem; line-height: 1.45; margin-top: 8px;">Moving high-draw appliances to 1 PM-3 PM can save an estimated 2.4 kWh today.</p>
+        </section>
+      </section>
+
+      <section class="view" data-view="vault">
+        <section class="panel vault-hero">
+          <p class="kicker">Vault Mode</p>
+          <h2>Emergency reserve locked</h2>
+          <div class="vault-meter"><span id="vaultValue">18%</span><small>protected capacity</small></div>
+          <label class="slider-label" for="vaultSlider">Reserve target <output id="vaultOutput">18%</output></label>
+          <input id="vaultSlider" type="range" min="5" max="40" value="18" aria-label="Reserve target" />
+          <button class="primary" style="width: 100%; margin-top: 18px;" type="button" id="lockVault">Lock Vault</button>
+        </section>
+        <section class="panel">
+          <article class="rule"><span class="marker"></span><div><strong>Emergency threshold</strong><br><small>Disable background sync when battery reaches reserve.</small></div></article>
+          <article class="rule"><span class="marker purple"></span><div><strong>EV reserve routing</strong><br><small>Keep 22 miles protected for late-night drives.</small></div></article>
+          <article class="rule"><span class="marker amber"></span><div><strong>Critical alerts</strong><br><small>Notify before draining protected capacity.</small></div></article>
+        </section>
+      </section>
+
+      <section class="view" data-view="settings">
+        <section class="panel profile">
+          <div class="avatar">V</div>
+          <div>
+            <p class="kicker">Efficiency Profile</p>
+            <h2>Level 12 Optimizer</h2>
+            <small>9 day streak, 4 badges unlocked</small>
+          </div>
+        </section>
+        <section class="badges">
+          <article class="panel"><span class="label">Flux Saver</span><strong>+420</strong><small>points</small></article>
+          <article class="panel"><span class="label">Cool Cells</span><strong>+180</strong><small>points</small></article>
+          <article class="panel"><span class="label">Peak Dodger</span><strong>+260</strong><small>points</small></article>
+        </section>
+        <section class="panel">
+          <label class="setting"><span><strong>Overcharge alerts</strong><br><small>Warn above 90% for daily cycles</small></span><input type="checkbox" checked /></label>
+          <label class="setting"><span><strong>Battery drain warnings</strong><br><small>Detect abnormal standby loss</small></span><input type="checkbox" checked /></label>
+          <label class="setting"><span><strong>Grid price automation</strong><br><small>Schedule around low tariff windows</small></span><input type="checkbox" /></label>
+        </section>
+      </section>
+
+      <nav class="nav" aria-label="Main navigation">
+        <button class="active" type="button" data-target="home"><svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /></svg><span>Home</span></button>
+        <button type="button" data-target="analytics"><svg viewBox="0 0 24 24"><path d="M4 19V5" /><path d="M4 19h16" /><path d="M8 16V9" /><path d="M13 16V7" /><path d="M18 16v-4" /></svg><span>Analytics</span></button>
+        <button type="button" data-target="vault"><svg viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="2" /><path d="M8 9V7a4 4 0 0 1 8 0v2" /><path d="M12 13v3" /></svg><span>Vault</span></button>
+        <button type="button" data-target="settings"><svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 8.97 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.97a1.7 1.7 0 0 0-.34-1.88l-.06-.06A2 2 0 0 1 7.03 4.2l.06.06A1.7 1.7 0 0 0 8.97 4.6 1.7 1.7 0 0 0 10 3.04V3a2 2 0 0 1 4 0v.09A1.7 1.7 0 0 0 15.03 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 8.97a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 0 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15Z" /></svg><span>Settings</span></button>
+      </nav>
+    </main>
+
+    <script>
+      const views = document.querySelectorAll(".view");
+      const navButtons = document.querySelectorAll(".nav button");
+      const percentEl = document.querySelector("#batteryPercent");
+      const healthEl = document.querySelector("#healthValue");
+      const tempEl = document.querySelector("#tempValue");
+      const progressEl = document.querySelector(".progress");
+      const chart = document.querySelector("#usageChart");
+      const ctx = chart.getContext("2d");
+      const rangeButtons = document.querySelectorAll("[data-range]");
+      const peakDraw = document.querySelector("#peakDraw");
+      const vaultSlider = document.querySelector("#vaultSlider");
+      const vaultValue = document.querySelector("#vaultValue");
+      const vaultOutput = document.querySelector("#vaultOutput");
+      const lockVault = document.querySelector("#lockVault");
+
+      const circumference = 2 * Math.PI * 92;
+      let batteryPercent = 82;
+      let tick = 0;
+
+      const chartData = {
+        day: { labels: ["12A", "4A", "8A", "12P", "4P", "8P"], values: [1.6, 1.1, 2.8, 4.9, 5.6, 7.8], peak: "7.8 kWh" },
+        week: { labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], values: [21, 19, 25, 22, 18, 27, 24], peak: "27 kWh" },
+        month: { labels: ["W1", "W2", "W3", "W4"], values: [144, 131, 126, 118], peak: "144 kWh" }
+      };
+
+      function setActiveView(target) {
+        views.forEach((view) => view.classList.toggle("active", view.dataset.view === target));
+        navButtons.forEach((button) => button.classList.toggle("active", button.dataset.target === target));
+        if (target === "analytics") drawChart(document.querySelector("[data-range].active").dataset.range);
+      }
+
+      function updateBattery(percent) {
+        const safePercent = Math.max(0, Math.min(100, percent));
+        percentEl.textContent = Math.round(safePercent);
+        progressEl.style.strokeDasharray = String(circumference);
+        progressEl.style.strokeDashoffset = String(circumference * (1 - safePercent / 100));
+      }
+
+      function drawChart(range) {
+        const data = chartData[range];
+        const width = chart.width;
+        const height = chart.height;
+        const padding = 48;
+        const max = Math.max(...data.values) * 1.16;
+        const points = data.values.map((value, index) => ({
+          x: padding + (index * (width - padding * 2)) / (data.values.length - 1),
+          y: height - padding - (value / max) * (height - padding * 1.7)
+        }));
+
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = "#050a14";
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.strokeStyle = "rgba(255,255,255,.08)";
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 5; i += 1) {
+          const y = padding + i * ((height - padding * 2) / 4);
+          ctx.beginPath();
+          ctx.moveTo(padding, y);
+          ctx.lineTo(width - padding, y);
+          ctx.stroke();
+        }
+
+        const fill = ctx.createLinearGradient(0, padding, 0, height - padding);
+        fill.addColorStop(0, "rgba(16, 231, 255, .32)");
+        fill.addColorStop(1, "rgba(138, 92, 255, 0)");
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, height - padding);
+        points.forEach((point) => ctx.lineTo(point.x, point.y));
+        ctx.lineTo(points[points.length - 1].x, height - padding);
+        ctx.closePath();
+        ctx.fillStyle = fill;
+        ctx.fill();
+
+        const stroke = ctx.createLinearGradient(padding, 0, width - padding, 0);
+        stroke.addColorStop(0, "#10e7ff");
+        stroke.addColorStop(0.6, "#8a5cff");
+        stroke.addColorStop(1, "#d94cff");
+        ctx.beginPath();
+        points.forEach((point, index) => {
+          if (index === 0) ctx.moveTo(point.x, point.y);
+          else {
+            const prev = points[index - 1];
+            const midX = (prev.x + point.x) / 2;
+            ctx.bezierCurveTo(midX, prev.y, midX, point.y, point.x, point.y);
+          }
+        });
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = 5;
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = "rgba(16, 231, 255, .42)";
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        points.forEach((point) => {
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
+          ctx.fillStyle = "#02040a";
+          ctx.fill();
+          ctx.strokeStyle = "#10e7ff";
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        });
+
+        ctx.fillStyle = "rgba(244,251,255,.76)";
+        ctx.font = "700 22px Inter, system-ui, sans-serif";
+        ctx.textAlign = "center";
+        data.labels.forEach((label, index) => ctx.fillText(label, points[index].x, height - 16));
+        peakDraw.textContent = data.peak;
+      }
+
+      navButtons.forEach((button) => button.addEventListener("click", () => setActiveView(button.dataset.target)));
+      rangeButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          rangeButtons.forEach((rangeButton) => rangeButton.classList.remove("active"));
+          button.classList.add("active");
+          drawChart(button.dataset.range);
+        });
+      });
+
+      vaultSlider.addEventListener("input", () => {
+        const value = `${vaultSlider.value}%`;
+        vaultValue.textContent = value;
+        vaultOutput.textContent = value;
+      });
+
+      lockVault.addEventListener("click", () => {
+        lockVault.textContent = "Vault Locked";
+        setTimeout(() => { lockVault.textContent = "Lock Vault"; }, 1500);
+      });
+
+      setInterval(() => {
+        tick += 1;
+        batteryPercent += Math.sin(tick / 4) * 0.28;
+        updateBattery(batteryPercent);
+        healthEl.textContent = `${96 + Math.round(Math.sin(tick / 9))}%`;
+        tempEl.textContent = `${31 + Math.round(Math.sin(tick / 3) * 2)}C`;
+      }, 1800);
+
+      updateBattery(batteryPercent);
+      drawChart("day");
+    </script>
+  </body>
+</html>
